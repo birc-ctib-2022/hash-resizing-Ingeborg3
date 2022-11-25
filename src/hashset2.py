@@ -7,7 +7,8 @@ from typing import (
 T = TypeVar('T')
 
 
-class HashSet(Generic[T]):
+
+class HashSet2(Generic[T]):
     """Set implementation using a hash table."""
 
     size: int
@@ -23,10 +24,13 @@ class HashSet(Generic[T]):
 
         self.size = initial_size
         self.used = 0
-        self.array = [list() for _ in range(initial_size)]
+        self.array = [dict() for _ in range(initial_size)]
 
-        for value in seq:
-            self.add(value)
+        for element in seq:
+            hash_val = hash(element)
+            index = hash_val % self.size
+            self.array[index][element] = hash_val
+            self.used += 1 
 
     def _get_bin(self, element: T) -> list[T]:
         """Get the list (bin) that element should sit in."""
@@ -39,26 +43,34 @@ class HashSet(Generic[T]):
         old_array = self.array
         self.size = new_size
         self.used = 0
-        self.array = [list() for _ in range(new_size)]
-        for b in old_array:
-            for x in b:
-                self.add(x)
+        self.array = [dict() for _ in range(new_size)]
+        for b in old_array: # b is bin (dictionary)
+            for x in b: # x is an element
+                # b[x] is hash value associated with element x in 
+                # dictionary b.
+                hash_val = b[x]
+                index = hash_val%self.size 
+                self.array[index][x] = hash_val
+                self.used += 1
 
     def add(self, element: T) -> None:
         """Add element to the set."""
-        b = self._get_bin(element)
-        if element not in b:
-            b.append(element)
+        hash_val = hash(element)
+        index = hash_val % self.size
+        bin = self.array[index]
+        if element not in bin: 
+            hash_val = hash(element)
+            bin[element] = hash_val
             self.used += 1
             if self.used > self.size / 2:
                 self._resize(int(2 * self.size))
 
     def remove(self, element: T) -> None:
         """Remove element from the set."""
-        b = self._get_bin(element)
-        if element not in b:
+        b = self._get_bin(element) 
+        if element not in b: 
             raise KeyError(element)
-        b.remove(element)
+        del b[element] # remove key-value pair from dictionary.
         self.used -= 1
         if self.used < self.size / 4:
             self._resize(int(self.size / 2))
@@ -70,12 +82,13 @@ class HashSet(Generic[T]):
 
     def __bool__(self) -> bool:
         """Test if the set is non-empty."""
-        return self.used > 0
+        return self.used > 0 
 
     def __contains__(self, element: T) -> bool:
         """Test if element is in the set."""
-        return element in self._get_bin(element)
+        return element in self._get_bin(element) 
 
     def __repr__(self) -> str:
         """Get representation string."""
-        return 'HashTableSet(' + repr(tuple(self)) + ')'
+        return 'HashTableSet(' + repr(tuple(self)) + ')' # hvordan 
+        # virker denne?
